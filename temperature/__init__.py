@@ -1,3 +1,4 @@
-from K import *
-from C import *
-import convert
+from .K import K
+from .C import C
+from .F import F
+from .convert import *
