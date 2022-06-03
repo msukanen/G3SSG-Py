@@ -1,9 +1,3 @@
-from ast import Is
-import re
-from .C import C
-from .K import K
-from .F import F
-
 def toC(v):
     if isinstance(v, C):
         return v
@@ -30,3 +24,7 @@ def toF(v):
     if isinstance(v, F):
         return v
     raise(f"{toF.__qualname__} doesn't support 'v' of {type(v)}")
+
+from .C import C
+from .K import K
+from .F import F
