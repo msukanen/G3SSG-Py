@@ -1,24 +1,24 @@
 import numbers
 
-class AU:
+class km:
     def __init__(self, val) -> None:
-        if isinstance(val, AU):
+        if isinstance(val, km):
             self.val = val.val
         elif isinstance(val, numbers.Number):
             self.val = val
         else:
-            self.val = toAU(val).val
+            self.val = toKM(val).val
 
     def __str__(self) -> str:
-        return f'{self.val} AU'
+        return f'{self.val} km'
 
     def __repl__(self) -> str:
-        return f'AU(val={self.val})'
+        return f'km(val={self.val})'
 
     def __plus__(self, other):
-        return AU(self.val + (toAU(other)).val)
+        return km(self.val + (toKM(other)).val)
         
     def __mul__(self, other):
-        return AU(self.val * (toAU(other)).val)
+        return km(self.val * (toKM(other)).val)
 
-from .convert import toAU
+from .convert import toKM

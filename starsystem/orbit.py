@@ -1,6 +1,13 @@
 import enum
 from star import Star
 from dice import d6
+import random
+from distance import mi
+
+__EARTH_RAD = mi(7915) / 2
+
+def __determineG(r:float, d:float) -> float:
+    ()
 
 class EmptyOrbit:
     def __init__(self) -> None:
@@ -30,7 +37,7 @@ class AsteroidBelt:
         while not accepted:
             accepted = True
             r = d6(3)
-            if r < 5: self.__type = AsteroidBelt.Type.M
+            if   r < 5:  self.__type = AsteroidBelt.Type.M
             elif r < 14: self.__type = AsteroidBelt.Type.S
             elif r < 18: self.__type = AsteroidBelt.Type.C
             else:
@@ -53,8 +60,62 @@ class GasGiant:
         Medium = 1
         Large = 2
         Huge = 3
-    def __init__(self, star:Star, size:Size = None) -> None:
-        pass
+    def __init__(self, star:Star, fixed = None) -> None:
+        if fixed == None:
+            self.__initR__()
+        elif isinstance(fixed, GasGiant.Size):
+            self.__initR__(star, fixed)
+        else:
+            self.__size = fixed.__size
+            self.__radius = fixed.__radius
+            self.__dow = fixed.__dow
+    def __initR__(self, star:Star, size:Size = None):
+        if size == None:
+            self.__dow = False
+            accepted = False
+            match star.klass():
+                case Star.Class.M:
+                    mod = -2
+                    canBeH = False
+                case Star.Class.K:
+                    mod = -1
+                    canBeH = False
+                case _:
+                    mod = 0
+                    canBeH = True
+            while not accepted:
+                accepted = True
+                r = d6(3)
+                if (r < 4) and canBeH:
+                    self.__size = GasGiant.Size.Huge
+                    self.__dow = True
+                elif r < 4:
+                    canBeH = True
+                    accepted = False
+                elif (r == 4) and canBeH:
+                    self.__size = GasGiant.Size.Huge
+                elif r == 4:
+                    canBeH = True
+                    accepted = False
+                elif r < 9:
+                    self.__size = GasGiant.Size.Small
+                elif r <= 13:
+                    self.__size = GasGiant.Size.Medium
+                else:
+                    self.__size = GasGiant.Size.Large
+        match self.__size:
+            case GasGiant.Size.Small:
+                self.__radius = random.uniform(27000.0, 33000.0, 1)
+            case GasGiant.Size.Medium:
+                self.__radius = random.uniform(45000.0, 55000.0, 1)
+            case GasGiant.Size.Large:
+                self.__radius = random.uniform(72000.0, 88000.0, 1)
+            case _:
+                self.__radius = random.uniform(180000.0, 220000.0, 1)
+    def size(self) -> Size:
+        return self.__size
+    def radius(self) -> float:
+        return self.__radius
 
 class Orbit:
     def __init__(self, star:Star, index:int, what = None) -> None:

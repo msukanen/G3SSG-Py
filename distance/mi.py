@@ -1,24 +1,24 @@
 import numbers
 
-class AU:
+class mi:
     def __init__(self, val) -> None:
-        if isinstance(val, AU):
+        if isinstance(val, mi):
             self.val = val.val
         elif isinstance(val, numbers.Number):
             self.val = val
         else:
-            self.val = toAU(val).val
+            self.val = toMI(val).val
 
     def __str__(self) -> str:
-        return f'{self.val} AU'
+        return f'{self.val} mi'
 
     def __repl__(self) -> str:
-        return f'AU(val={self.val})'
+        return f'mi(val={self.val})'
 
     def __plus__(self, other):
-        return AU(self.val + (toAU(other)).val)
+        return mi(self.val + (toMI(other)).val)
         
     def __mul__(self, other):
-        return AU(self.val * (toAU(other)).val)
+        return mi(self.val * (toMI(other)).val)
 
-from .convert import toAU
+from .convert import toMI

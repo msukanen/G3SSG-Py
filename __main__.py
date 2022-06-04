@@ -22,6 +22,8 @@ def hello():
 
     s = Star()
     print(f'{s}')
+    m = mi(1)
+    print(f'{m} = {toKM(m)}')
 
 if __name__=="__main__":
     sys.exit(hello())

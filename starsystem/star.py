@@ -147,10 +147,10 @@ class Star:
             self.__bodec = random.uniform(0.3, 0.4)
         self.__luminosity = d10(1)-1
 
-    def size(self):
+    def type(self):
         """Get star's size category."""
         return self.__size
-    def type(self):
+    def klass(self):
         """Get star's type (color)."""
         return self.__type
     def mass(self) -> float:
