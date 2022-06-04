@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Type
 from dice import d6, d10
 from distance import *
+import random
 
 class Star:
     """Encapsulates all kinds of star-related info.
@@ -46,6 +47,7 @@ class Star:
         def __str__(self) -> str:
             return self.name
     def __init__(self, fixed = None) -> None:
+        """Construct self either based on other star (aka. 'fixed') or completely randomly."""
         if isinstance(fixed, Star):
             self.__size = fixed.__size
             self.__type = fixed.__type
@@ -60,7 +62,7 @@ class Star:
         else:
             self.__initR__()
     def __initR__(self):
-        # determine size 1st
+        """Randomized construction of a star."""
         r = d6(3)
         if r < 6:
             sz = Star.Type.V
@@ -140,28 +142,19 @@ class Star:
         self.__lrm = dta[5]
         self.__based = AU(0.1*d6(1))
         if (sz == Star.Type.sd) and (sz == Star.Class.M):
-            self.__bodec = 0.2
+            self.__bodec = random.uniform(0.195, 0.205)
         else:
-            r = d6(1)
-            if   r < 3: self.__bodec = 0.3
-            elif r < 5: self.__bodec = 0.35
-            else:       self.__bodec = 0.4
+            self.__bodec = random.uniform(0.3, 0.4)
         self.__luminosity = d10(1)-1
 
     def size(self):
-        """Get star's size category.
-        
-        :returns: Star.Size"""
+        """Get star's size category."""
         return self.__size
     def type(self):
-        """Get star's type (color).
-        
-        :returns: Star.Type"""
+        """Get star's type (color)."""
         return self.__type
     def mass(self) -> float:
-        """Get star's relative mass (in relation to Sol).
-        
-        :returns: float"""
+        """Get star's stellar mass in relation to Sol (e.g. Sol ≅ 1.0)."""
         return self.__mass
     def biozone(self) -> tuple[AU, AU]:
         """
@@ -174,15 +167,33 @@ class Star:
         if isinstance(self.__biozone, AU):
             return self.__biozone, self.__biozone*1.5
         else: return self.__biozone[0], self.__biozone[1]
-    def innerLimit(self):
-        """Get star's inner limit. Below this limit no permanent solid matter can form.
+    def isOrbitClose(self, orbitIdx) -> bool:
+        """
+        Determine whether given orbit is closer than [Goldilocks zone](https://en.wikipedia.org/wiki/Circumstellar_habitable_zone).
+
+        :param orbitIdx: index
+        """
+        return self.distanceOf(orbitIdx) < self.biozone()[0]
+    def isOrbitFar(self, orbitIdx:int, by:int = 1) -> bool:
+        """
+        Determine whether given orbit is further out than [Goldilocks zone](https://en.wikipedia.org/wiki/Circumstellar_habitable_zone).
+
+        :param `orbitIdx`: `0+`-index
+        :param `by`: desired border distance multiplier, if any; default: `1`
+        """
+        return (self.distanceOf(orbitIdx) * by) > self.biozone()[1]
+    def innerLimit(self) -> AU:
+        """Get star's inner limit.
         
-        :returns: AU"""
+        Below this limit no solid matter can exist for long. It either evaporates or is sucked into the star itself."""
         return self.__innerLimit
-    def radius(self):
-        """Get radius of the star.
+    def canOrbitExist(self, orbitIdx:int) -> bool:
+        """See if given orbit can hold anything permanent.
         
-        :returns: AU"""
+        See also: `innerLimit()`"""
+        return self.distanceOf(orbitIdx) > self.innerLimit()
+    def radius(self) -> AU:
+        """Get radius of the star."""
         return self.__radius
     def numOrbits(self) -> int:
         """Get number of potential orbits."""
@@ -190,70 +201,67 @@ class Star:
     def lifeRollMod(self) -> int:
         """Get star's life roll modifier."""
         return self.__lrm
-    def distanceOf(self, orbitId:int):
-        """Determine distance of given orbit index.
+    def distanceOf(self, orbitIdx:int) -> AU:
+        """Determine distance of the given orbit.
         
-        :param orbitId int: orbit index
-        :return: `AU`"""
-        if orbitId == 0:
+        :param `orbitIdx`: `0+`-index"""
+        if orbitIdx == 0:
             return self.__based
-        elif orbitId == 1:
+        elif orbitIdx == 1:
             return self.__based + self.__bodec
         else:
-            return self.__based + pow(2, orbitId-1) * self.__bodec
+            return self.__based + pow(2, orbitIdx-1) * self.__bodec
     def luminosity(self) -> int:
         """Get star's luminosity.
         
-        Luminosity ranges from 0 (brightest) to 9 (dimmest).
-        
-        :returns: `0-9`"""
+        Luminosity ranges from 0 (brightest) to 9 (dimmest)."""
         return self.__luminosity
     def __str__(self) -> str:
         if self.__type == Star.Type.D:
             return 'D'
         return f'{self.__type}{self.__luminosity}{self.__size}'
         
-def genDtaBy(s, t):
+def genDtaBy(s:Star.Type, c:Star.Class) -> tuple[float, AU, AU, AU, int, int, int]:
     """
     Choose star data based on its size and type.
 
-    :param Star.Size s: Star size.
-    :param Star.Type t: Star type (color).
+    :param `s`: Star type (size).
+    :param `c`: Star class (color).
     :returns: tuple(...)
-        - mass - mass relative to Sol.
-        - biozone - AU or tuple(inner AU, outer AU)
-        - inner limit - AU limit below which all matter vapes
-        - radius - star's radius in AU
+        - stellar mass
+        - biozone - AU, or a tuple of inner AU and outer AU
+        - inner limit
+        - radius
         - potential of planets on 3d6
-        - number of possible orbits
+        - number of orbits to determine if/when orbital potential is fulfilled
         - life roll mod
     """
-    if t is Star.Class.O:
+    if c is Star.Class.O:
         if   s is Star.Type.Ia: return 70, AU(790), AU(16), AU(0.2), 0, None, -12
         elif s is Star.Type.Ib: return 60, AU(630), AU(13), AU(0.1), 0, None, -12
         else:                   return 50, AU(500), AU(10), 0, None, -9
-    elif t is Star.Class.B:
+    elif c is Star.Class.B:
         if   s is Star.Type.Ia: return 50, AU(500), AU(10), AU(0.2), 0, None, -10
         elif s is Star.Type.Ib: return 40, AU(320), AU(6.3), AU(0.1), 0, None, -10
         elif s is Star.Type.II: return 35, AU(250), AU(5), AU(0.1), 3, d6(3)+1, -10
         elif s is Star.Type.III: return 30, AU(200), AU(4), 0, 3, d6(3)+1, -10
         elif s is Star.Type.IV: return 20, AU(180), AU(3.8), 0, 3, d6(3)+1, -10
         else:                   return 10, AU(30), AU(0.6), 0, 4, d6(3), -9
-    elif t is Star.Class.A:
+    elif c is Star.Class.A:
         if   s is Star.Type.Ia: return 30, AU(200), AU(4), AU(0.6), 3, d6(3)+3, -10
         elif s is Star.Type.Ib: return 16, AU(50), AU(1), AU(0.2), 3, d6(3)+2, -10
         elif s is Star.Type.II: return 10, AU(20), AU(0.4), 0, 3, d6(3)+2, -10
         elif s is Star.Type.III: return 6, AU(5), 0, 0, 3, d6(3)+1, -10
         elif s is Star.Type.IV: return 4, AU(4), 0, 0, 4, d6(3), -10
         else:                   return 3, AU(3.1), 0, 0, 5, d6(3)-1, -9
-    elif t is Star.Class.F:
+    elif c is Star.Class.F:
         if   s is Star.Type.Ia: return 15, AU(200), AU(4), AU(0.8), 4, d6(3)+3, -10
         elif s is Star.Type.Ib: return 13, AU(50), AU(1), AU(0.2), 4, d6(3)+2, -10
         elif s is Star.Type.II: return 8, AU(13), AU(0.3), 0, 4, d6(3)+1, -9
         elif s is Star.Type.III: return 2.5, AU(2.5), AU(0.1), 0, 4, d6(3), -9
         elif s is Star.Type.IV: return 2.2, AU(2), 0, 0, 6, d6(3), -9
         else:                   return 1.9, AU(1.6), 0, 0, 13, d6(3)-1, -8
-    elif t is Star.Class.G:
+    elif c is Star.Class.G:
         if   s is Star.Type.Ia: return 12, AU(160), AU(3.1), AU(1.4), 6, d6(3)+3, -10
         elif s is Star.Type.Ib: return 10, AU(50), AU(1), AU(0.4), 6, d6(3)+2, -10
         elif s is Star.Type.II: return 6, AU(13), AU(0.3), AU(0.1), 6, d6(3)+1, -9
@@ -261,7 +269,7 @@ def genDtaBy(s, t):
         elif s is Star.Type.IV: return 1.8, AU(1), 0, 0, 7, d6(3)-1, -6
         elif s is Star.Type.V: return 1.1, AU(0.8), 0, 0, 16, d6(3)-2, 0
         else:                  return 0.8, AU(0.5), 0, 0, 16, d6(2)+1, 1
-    elif t is Star.Class.K:
+    elif c is Star.Class.K:
         if   s is Star.Type.Ia: return 15, AU(125), AU(2.5), AU(3), 10, d6(3)+2, -10
         elif s is Star.Type.Ib: return 12, AU(50), AU(1), AU(1), 16, d6(3)+2, -10
         elif s is Star.Type.II: return 6, AU(13), AU(0.3), AU(0.2), 16, d6(3)+1, -9
@@ -269,7 +277,7 @@ def genDtaBy(s, t):
         elif s is Star.Type.IV: return 2.3, AU(1), 0, 0, 16, d6(3)-1, -5
         elif s is Star.Type.V: return 0.9, (AU(0.5), AU(0.6)), 0, 0, 16, d6(3)-2, 0
         else:                  return 0.5, AU(0.2), 0, 0, 16, d6(2)+1, 1
-    elif t is Star.Class.M:
+    elif c is Star.Class.M:
         if   s is Star.Type.Ia: return 20, AU(100), AU(2), AU(7), 16, d6(3), -10
         elif s is Star.Type.Ib: return 16, AU(50), AU(1), AU(4.2), 16, d6(3), -10
         elif s is Star.Type.II: return 8, AU(16), AU(0.3), AU(1.1), 16, d6(3), -9
