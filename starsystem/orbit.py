@@ -1,13 +1,49 @@
 import enum
+import numbers
 from star import Star
 from dice import d6
 import random
 from distance import mi
 
 __EARTH_RAD = mi(7915) / 2
+__EARTH_DNS = 5.5
 
-def __determineG(r:float, d:float) -> float:
-    ()
+def __gravityFor(r:float, d:float) -> float:
+    """Determine gravity from given radius and density.
+    
+    :param `r`: radius of planet.
+    :param `d`: density of planet."""
+    return (r/__EARTH_RAD) * (d/__EARTH_DNS)
+
+class AxialTilt:
+    class SeasonalEffect(enum.Enum):
+        NoSeasons = 0
+        Minor = 1
+        EarthLike = 2
+        Major = 3
+        Gross = 4
+    def __init__(self, fixed = None) -> None:
+        if fixed == None:
+            r = d6(2)
+            if r < 4: self.__tilt = 0
+            elif r < 8: self.__tilt = d6()*3
+            elif r < 11: self.__tilt = d6(2)+20
+            elif r == 11: self.__tilt = d6(3)+30
+            else: self.__tilt = min(90, d6()*10+40)
+            self.__seasonalEffect = self.__mkEff()
+        elif isinstance(fixed, numbers.Number):
+            self.__tilt = fixed
+            self.__seasonalEffect = self.__mkEff()
+        elif isinstance(fixed, AxialTilt):
+            self.__tilt = fixed.__tilt
+            self.__seasonalEffect = fixed.__seasonalEffect
+        else: raise Exception(f'No idea how to convert {type(fixed)} into axial tilt...')
+    def __mkEff(self):
+        if   self.__tilt <  3: return AxialTilt.SeasonalEffect.NoSeasons
+        elif self.__tilt < 19: return AxialTilt.SeasonalEffect.Minor
+        elif self.__tilt < 33: return AxialTilt.SeasonalEffect.EarthLike
+        elif self.__tilt < 50: return AxialTilt.SeasonalEffect.Major
+        else:                  return AxialTilt.SeasonalEffect.Gross
 
 class EmptyOrbit:
     def __init__(self) -> None:
@@ -69,6 +105,9 @@ class GasGiant:
             self.__size = fixed.__size
             self.__radius = fixed.__radius
             self.__dow = fixed.__dow
+            self.__density = fixed.__density
+            self.__gravity = fixed.__gravity
+            self.__axtilt = fixed.__axtilt
     def __initR__(self, star:Star, size:Size = None):
         if size == None:
             self.__dow = False
@@ -112,10 +151,28 @@ class GasGiant:
                 self.__radius = random.uniform(72000.0, 88000.0, 1)
             case _:
                 self.__radius = random.uniform(180000.0, 220000.0, 1)
+        self.__density = random.uniform(0.6, 2.5, 1)
+        self.__gravity = __gravityFor(self.__radius, self.__density)
+        self.__axtilt = AxialTilt()
+
     def size(self) -> Size:
+        """Get size category."""
         return self.__size
     def radius(self) -> float:
+        """Get radius (in one or other suitable unit)."""
         return self.__radius
+    def density(self) -> float:
+        """Get density value."""
+        return self.__density
+    def gravity(self) -> float:
+        """Get gravity in Gs."""
+        return self.__gravity
+    def destroyerOfWorlds(self) -> bool:
+        """Is this giant a 'destroyer of worlds'?"""
+        return self.__dow
+    def axialTilt(self) -> AxialTilt:
+        """Get axial tilt."""
+        return self.__axtilt
 
 class Orbit:
     def __init__(self, star:Star, index:int, what = None) -> None:
