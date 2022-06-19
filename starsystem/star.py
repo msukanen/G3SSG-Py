@@ -7,8 +7,8 @@ import random
 class Star:
     """Encapsulates all kinds of star-related info.
     
-    NOTE: this class is meant to be "immutable". Stars, afterall, seldom change their
-    parameters...
+    NOTE: this class is meant to be "immutable". Afterall, stars seldom change their
+    parameters, and when/if they do it'll be rather spectacular...
     """
     class Type(Enum):
         """
@@ -59,6 +59,7 @@ class Star:
             self.__lrm = fixed.__lrm
             self.__bodec = fixed.__bodec
             self.__based = fixed.__based
+            self.__luminosity = fixed.__luminosity
         else:
             self.__initR__()
     def __initR__(self):
@@ -127,9 +128,9 @@ class Star:
         else:
             usz = sz
             uty = ty
-        dta  = genDtaBy(sz, ty)
+        dta  = Star.__genDtaBy(sz, ty)
         if sz == Star.Type.D:
-            udta = genDtaBy(usz, uty)
+            udta = Star.__genDtaBy(usz, uty)
         self.__size = sz
         self.__type = ty
         self.__mass = dta[0]
@@ -147,15 +148,19 @@ class Star:
             self.__bodec = random.uniform(0.3, 0.4)
         self.__luminosity = d10(1)-1
 
+    @property
     def type(self):
         """Get star's size category."""
         return self.__size
+    @property
     def klass(self):
         """Get star's type (color)."""
         return self.__type
+    @property
     def mass(self) -> float:
         """Get star's stellar mass in relation to Sol (e.g. Sol ≅ 1.0)."""
         return self.__mass
+    @property
     def biozone(self) -> tuple[AU, AU]:
         """
         Get star's biozone (goldilocks zone) borders.
@@ -182,6 +187,7 @@ class Star:
         :param `by`: desired border distance multiplier, if any; default: `1`
         """
         return (self.distanceOf(orbitIdx) * by) > self.biozone()[1]
+    @property
     def innerLimit(self) -> AU:
         """Get star's inner limit.
         
@@ -192,12 +198,15 @@ class Star:
         
         See also: `innerLimit()`"""
         return self.distanceOf(orbitIdx) > self.innerLimit()
+    @property
     def radius(self) -> AU:
         """Get radius of the star."""
         return self.__radius
+    @property
     def numOrbits(self) -> int:
         """Get number of potential orbits."""
         return self.__numOrbits
+    @property
     def lifeRollMod(self) -> int:
         """Get star's life roll modifier."""
         return self.__lrm
@@ -211,6 +220,7 @@ class Star:
             return self.__based + self.__bodec
         else:
             return self.__based + pow(2, orbitIdx-1) * self.__bodec
+    @property
     def luminosity(self) -> int:
         """Get star's luminosity.
         
@@ -220,69 +230,70 @@ class Star:
         if self.__type == Star.Type.D:
             return 'D'
         return f'{self.__type}{self.__luminosity}{self.__size}'
-        
-def genDtaBy(s:Star.Type, c:Star.Class) -> tuple[float, AU, AU, AU, int, int, int]:
-    """
-    Choose star data based on its size and type.
 
-    :param `s`: Star type (size).
-    :param `c`: Star class (color).
-    :returns: tuple(...)
-        - stellar mass
-        - biozone - AU, or a tuple of inner AU and outer AU
-        - inner limit
-        - radius
-        - potential of planets on 3d6
-        - number of orbits to determine if/when orbital potential is fulfilled
-        - life roll mod
-    """
-    if c is Star.Class.O:
-        if   s is Star.Type.Ia: return 70, AU(790), AU(16), AU(0.2), 0, None, -12
-        elif s is Star.Type.Ib: return 60, AU(630), AU(13), AU(0.1), 0, None, -12
-        else:                   return 50, AU(500), AU(10), 0, None, -9
-    elif c is Star.Class.B:
-        if   s is Star.Type.Ia: return 50, AU(500), AU(10), AU(0.2), 0, None, -10
-        elif s is Star.Type.Ib: return 40, AU(320), AU(6.3), AU(0.1), 0, None, -10
-        elif s is Star.Type.II: return 35, AU(250), AU(5), AU(0.1), 3, d6(3)+1, -10
-        elif s is Star.Type.III: return 30, AU(200), AU(4), 0, 3, d6(3)+1, -10
-        elif s is Star.Type.IV: return 20, AU(180), AU(3.8), 0, 3, d6(3)+1, -10
-        else:                   return 10, AU(30), AU(0.6), 0, 4, d6(3), -9
-    elif c is Star.Class.A:
-        if   s is Star.Type.Ia: return 30, AU(200), AU(4), AU(0.6), 3, d6(3)+3, -10
-        elif s is Star.Type.Ib: return 16, AU(50), AU(1), AU(0.2), 3, d6(3)+2, -10
-        elif s is Star.Type.II: return 10, AU(20), AU(0.4), 0, 3, d6(3)+2, -10
-        elif s is Star.Type.III: return 6, AU(5), 0, 0, 3, d6(3)+1, -10
-        elif s is Star.Type.IV: return 4, AU(4), 0, 0, 4, d6(3), -10
-        else:                   return 3, AU(3.1), 0, 0, 5, d6(3)-1, -9
-    elif c is Star.Class.F:
-        if   s is Star.Type.Ia: return 15, AU(200), AU(4), AU(0.8), 4, d6(3)+3, -10
-        elif s is Star.Type.Ib: return 13, AU(50), AU(1), AU(0.2), 4, d6(3)+2, -10
-        elif s is Star.Type.II: return 8, AU(13), AU(0.3), 0, 4, d6(3)+1, -9
-        elif s is Star.Type.III: return 2.5, AU(2.5), AU(0.1), 0, 4, d6(3), -9
-        elif s is Star.Type.IV: return 2.2, AU(2), 0, 0, 6, d6(3), -9
-        else:                   return 1.9, AU(1.6), 0, 0, 13, d6(3)-1, -8
-    elif c is Star.Class.G:
-        if   s is Star.Type.Ia: return 12, AU(160), AU(3.1), AU(1.4), 6, d6(3)+3, -10
-        elif s is Star.Type.Ib: return 10, AU(50), AU(1), AU(0.4), 6, d6(3)+2, -10
-        elif s is Star.Type.II: return 6, AU(13), AU(0.3), AU(0.1), 6, d6(3)+1, -9
-        elif s is Star.Type.III: return 2.7, AU(3.1), AU(0.1), 0, 6, d6(3), -8
-        elif s is Star.Type.IV: return 1.8, AU(1), 0, 0, 7, d6(3)-1, -6
-        elif s is Star.Type.V: return 1.1, AU(0.8), 0, 0, 16, d6(3)-2, 0
-        else:                  return 0.8, AU(0.5), 0, 0, 16, d6(2)+1, 1
-    elif c is Star.Class.K:
-        if   s is Star.Type.Ia: return 15, AU(125), AU(2.5), AU(3), 10, d6(3)+2, -10
-        elif s is Star.Type.Ib: return 12, AU(50), AU(1), AU(1), 16, d6(3)+2, -10
-        elif s is Star.Type.II: return 6, AU(13), AU(0.3), AU(0.2), 16, d6(3)+1, -9
-        elif s is Star.Type.III: return 3, AU(4), AU(0.1), 0, 16, d6(3), -7
-        elif s is Star.Type.IV: return 2.3, AU(1), 0, 0, 16, d6(3)-1, -5
-        elif s is Star.Type.V: return 0.9, (AU(0.5), AU(0.6)), 0, 0, 16, d6(3)-2, 0
-        else:                  return 0.5, AU(0.2), 0, 0, 16, d6(2)+1, 1
-    elif c is Star.Class.M:
-        if   s is Star.Type.Ia: return 20, AU(100), AU(2), AU(7), 16, d6(3), -10
-        elif s is Star.Type.Ib: return 16, AU(50), AU(1), AU(4.2), 16, d6(3), -10
-        elif s is Star.Type.II: return 8, AU(16), AU(0.3), AU(1.1), 16, d6(3), -9
-        elif s is Star.Type.III: return 4, AU(5), AU(0.1), AU(0.3), 16, d6(3), -6
-        elif s is Star.Type.V: return 0.3, (AU(0.1), AU(0.2)), 0, 0, 16, d6(3)-2, 1
-        else:                  return 0.2, (AU(0.1), AU(0.1)), 0, 0, 16, d6(2)+2, 2
-    else:
-        return 0.8, (AU(0.03), AU(0.03)), 0, 0, 0, 0, -10
+    @staticmethod
+    def __genDtaBy(s:Type, c:Class) -> tuple[float, AU, AU, AU, int, int, int]:
+        """
+        Choose star data based on its size and type.
+
+        :param `s`: Star type (size).
+        :param `c`: Star class (color).
+        :returns: tuple(...)
+            - stellar mass
+            - biozone - AU, or a tuple of inner AU and outer AU
+            - inner limit
+            - radius
+            - potential of planets on 3d6
+            - number of orbits to determine if/when orbital potential is fulfilled
+            - life roll mod
+        """
+        if c is Star.Class.O:
+            if   s is Star.Type.Ia: return 70, AU(790), AU(16), AU(0.2), 0, None, -12
+            elif s is Star.Type.Ib: return 60, AU(630), AU(13), AU(0.1), 0, None, -12
+            else:                   return 50, AU(500), AU(10), 0, None, -9
+        elif c is Star.Class.B:
+            if   s is Star.Type.Ia: return 50, AU(500), AU(10), AU(0.2), 0, None, -10
+            elif s is Star.Type.Ib: return 40, AU(320), AU(6.3), AU(0.1), 0, None, -10
+            elif s is Star.Type.II: return 35, AU(250), AU(5), AU(0.1), 3, d6(3)+1, -10
+            elif s is Star.Type.III: return 30, AU(200), AU(4), 0, 3, d6(3)+1, -10
+            elif s is Star.Type.IV: return 20, AU(180), AU(3.8), 0, 3, d6(3)+1, -10
+            else:                   return 10, AU(30), AU(0.6), 0, 4, d6(3), -9
+        elif c is Star.Class.A:
+            if   s is Star.Type.Ia: return 30, AU(200), AU(4), AU(0.6), 3, d6(3)+3, -10
+            elif s is Star.Type.Ib: return 16, AU(50), AU(1), AU(0.2), 3, d6(3)+2, -10
+            elif s is Star.Type.II: return 10, AU(20), AU(0.4), 0, 3, d6(3)+2, -10
+            elif s is Star.Type.III: return 6, AU(5), 0, 0, 3, d6(3)+1, -10
+            elif s is Star.Type.IV: return 4, AU(4), 0, 0, 4, d6(3), -10
+            else:                   return 3, AU(3.1), 0, 0, 5, d6(3)-1, -9
+        elif c is Star.Class.F:
+            if   s is Star.Type.Ia: return 15, AU(200), AU(4), AU(0.8), 4, d6(3)+3, -10
+            elif s is Star.Type.Ib: return 13, AU(50), AU(1), AU(0.2), 4, d6(3)+2, -10
+            elif s is Star.Type.II: return 8, AU(13), AU(0.3), 0, 4, d6(3)+1, -9
+            elif s is Star.Type.III: return 2.5, AU(2.5), AU(0.1), 0, 4, d6(3), -9
+            elif s is Star.Type.IV: return 2.2, AU(2), 0, 0, 6, d6(3), -9
+            else:                   return 1.9, AU(1.6), 0, 0, 13, d6(3)-1, -8
+        elif c is Star.Class.G:
+            if   s is Star.Type.Ia: return 12, AU(160), AU(3.1), AU(1.4), 6, d6(3)+3, -10
+            elif s is Star.Type.Ib: return 10, AU(50), AU(1), AU(0.4), 6, d6(3)+2, -10
+            elif s is Star.Type.II: return 6, AU(13), AU(0.3), AU(0.1), 6, d6(3)+1, -9
+            elif s is Star.Type.III: return 2.7, AU(3.1), AU(0.1), 0, 6, d6(3), -8
+            elif s is Star.Type.IV: return 1.8, AU(1), 0, 0, 7, d6(3)-1, -6
+            elif s is Star.Type.V: return 1.1, AU(0.8), 0, 0, 16, d6(3)-2, 0
+            else:                  return 0.8, AU(0.5), 0, 0, 16, d6(2)+1, 1
+        elif c is Star.Class.K:
+            if   s is Star.Type.Ia: return 15, AU(125), AU(2.5), AU(3), 10, d6(3)+2, -10
+            elif s is Star.Type.Ib: return 12, AU(50), AU(1), AU(1), 16, d6(3)+2, -10
+            elif s is Star.Type.II: return 6, AU(13), AU(0.3), AU(0.2), 16, d6(3)+1, -9
+            elif s is Star.Type.III: return 3, AU(4), AU(0.1), 0, 16, d6(3), -7
+            elif s is Star.Type.IV: return 2.3, AU(1), 0, 0, 16, d6(3)-1, -5
+            elif s is Star.Type.V: return 0.9, (AU(0.5), AU(0.6)), 0, 0, 16, d6(3)-2, 0
+            else:                  return 0.5, AU(0.2), 0, 0, 16, d6(2)+1, 1
+        elif c is Star.Class.M:
+            if   s is Star.Type.Ia: return 20, AU(100), AU(2), AU(7), 16, d6(3), -10
+            elif s is Star.Type.Ib: return 16, AU(50), AU(1), AU(4.2), 16, d6(3), -10
+            elif s is Star.Type.II: return 8, AU(16), AU(0.3), AU(1.1), 16, d6(3), -9
+            elif s is Star.Type.III: return 4, AU(5), AU(0.1), AU(0.3), 16, d6(3), -6
+            elif s is Star.Type.V: return 0.3, (AU(0.1), AU(0.2)), 0, 0, 16, d6(3)-2, 1
+            else:                  return 0.2, (AU(0.1), AU(0.1)), 0, 0, 16, d6(2)+2, 2
+        else:
+            return 0.8, (AU(0.03), AU(0.03)), 0, 0, 0, 0, -10

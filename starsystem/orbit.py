@@ -1,9 +1,11 @@
 import enum
 import numbers
+from telnetlib import GA
 from star import Star
 from dice import d6
 import random
 from distance import mi
+from indict import dictInc
 
 __EARTH_RAD = mi(7915) / 2
 __EARTH_DNS = 5.5
@@ -49,12 +51,36 @@ class EmptyOrbit:
     def __init__(self) -> None:
         pass
 
+class Moon:
+    class Type(enum.Enum):
+        """Moon types."""
+        Moonlet = 0
+        Small = 1
+        Medium = 2
+        Large = 3
+        Giant = 4
+        SmallGG = 5
+    def __init__(self, typ:Type, num:int) -> None:
+        self.__type = typ
+        self.__num = num
+
+    @property
+    def number(self):
+        return self.__num
+
+    @number.setter
+    def number(self, n:int):
+        self.__num = 0 if n < 1 else n
+        return self.__num
+
 class Terrestrial:
     def __init__(self, star:Star) -> None:
         pass
 
 class AsteroidBelt:
+    """Encapsulate asteroid belt info."""
     class Type(enum.Enum):
+        """Asteroid types."""
         M = 0
         S = 1
         C = 2
@@ -83,19 +109,36 @@ class AsteroidBelt:
     def __str__(self) -> str:
         if self.__icy: return f'icy {self.__type}'
         else:          return f'{self.__type}'
+    @property
     def icy(self) -> bool:
+        """Asteroid belt is icy?"""
         return self.__icy
+    @property
     def type(self):
+        """Get type of asteroids in the belt."""
         return self.__type
+    @property
     def hasVeryLargeAsteroids(self) -> bool:
+        """Does the belt have very large asteroid(s) (akin to Vesta, Ceres, etc.)?"""
         return self.__vla
 
 class GasGiant:
+    """Encapsulate Gas Giant info."""
     class Size(enum.Enum):
+        """Gas giant size categories."""
         Small = 0
         Medium = 1
         Large = 2
         Huge = 3
+    class SpecialFeature(enum.Enum):
+        """Gas giant special features."""
+        RetrogradeMoon = 0,
+        InclinedOrbitMoon = 1,
+        FaintRing = 2,
+        SpectacularRing = 3,
+        AsteroidBelt = 4,
+        OortBelt = 5,
+        HabitableMoon = 6
     def __init__(self, star:Star, fixed = None) -> None:
         if fixed == None:
             self.__initR__()
@@ -108,6 +151,8 @@ class GasGiant:
             self.__density = fixed.__density
             self.__gravity = fixed.__gravity
             self.__axtilt = fixed.__axtilt
+            self.__moons = fixed.__moons
+            self.__sfeats = fixed.__sfeats
     def __initR__(self, star:Star, size:Size = None):
         if size == None:
             self.__dow = False
@@ -154,6 +199,44 @@ class GasGiant:
         self.__density = random.uniform(0.6, 2.5, 1)
         self.__gravity = __gravityFor(self.__radius, self.__density)
         self.__axtilt = AxialTilt()
+        match self.__size:
+            case GasGiant.Size.Large: mod = 1
+            case GasGiant.Size.Huge: mod = 2
+            case _: mod = 0
+        self.__moons = {}
+        self.__moons[Moon.Type.Moonlet] = Moon(Moon.Type.Moonlet, d6(3)+mod)
+        self.__moons[Moon.Type.Small] = Moon(Moon.Type.Small, d6(2)+mod)
+        self.__moons[Moon.Type.Medium] = Moon(Moon.Type.Medium, d6()+1+mod)
+        n = d6()-3+mod
+        if n > 0: self.__moons[Moon.Type.Large] = Moon(Moon.Type.Large, n)
+        n = d6()-5+mod
+        if n > 0: self.__moons[Moon.Type.Giant] = Moon(Moon.Type.Giant, n)
+        n = d6()-7+mod
+        if n > 0:
+            ggs = []
+            for _ in range(0,n):
+                ggs.append(GasGiant(star, GasGiant.Size.Small))
+            self.__moons[Moon.Type.SmallGG] = ggs
+        match self.__size:
+            case GasGiant.Size.Huge: mod = 3
+            case GasGiant.Size.Large: mod = 2
+            case _: mod = 0
+        self.__sfeats = {}
+        accepted = 1
+        while accepted > 0:
+            accepted -= 1
+            r = d6(3)+mod
+            if r < 10: pass
+            elif r == 10 and d6()<4: dictInc(self.__sfeats, GasGiant.SpecialFeature.RetrogradeMoon)
+            elif r == 10: dictInc(self.__sfeats GasGiant.SpecialFeature.InclinedOrbitMoon)
+            elif r < 14: dictInc(self.__sfeats, GasGiant.SpecialFeature.FaintRing)
+            elif r == 14: dictInc(self.__sfeats, GasGiant.SpecialFeature.SpectacularRing)
+            elif r == 15: dictInc(self.__sfeats, GasGiant.SpecialFeature.AsteroidBelt)
+            elif r == 16: dictInc(self.__sfeats, GasGiant.SpecialFeature.OortBelt)
+            elif r == 17:
+                for m in self.__moons: m.number *= 2
+            elif r == 18: accepted += 2
+            else: dictInc(self.__sfeats, GasGiant.SpecialFeature.HabitableMoon)
 
     def size(self) -> Size:
         """Get size category."""
