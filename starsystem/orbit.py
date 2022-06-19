@@ -228,7 +228,7 @@ class GasGiant:
             r = d6(3)+mod
             if r < 10: pass
             elif r == 10 and d6()<4: dictInc(self.__sfeats, GasGiant.SpecialFeature.RetrogradeMoon)
-            elif r == 10: dictInc(self.__sfeats GasGiant.SpecialFeature.InclinedOrbitMoon)
+            elif r == 10: dictInc(self.__sfeats, GasGiant.SpecialFeature.InclinedOrbitMoon)
             elif r < 14: dictInc(self.__sfeats, GasGiant.SpecialFeature.FaintRing)
             elif r == 14: dictInc(self.__sfeats, GasGiant.SpecialFeature.SpectacularRing)
             elif r == 15: dictInc(self.__sfeats, GasGiant.SpecialFeature.AsteroidBelt)
