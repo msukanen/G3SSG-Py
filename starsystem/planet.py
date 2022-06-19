@@ -1,4 +1,8 @@
 from .axialtilt import AxialTilt
+from distance import mi
+
+__EARTH_RAD = mi(7915) / 2
+__EARTH_DNS = 5.5
 
 class Planet:
     def __init__(self) -> None:

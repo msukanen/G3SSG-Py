@@ -1,13 +1,10 @@
 from star import Star
 from dice import d6
-from distance import mi
 from .asteroidbelt import AsteroidBelt
 from .moons import Moon
 from .density import Density
 from .gasgiant import GasGiant
-
-__EARTH_RAD = mi(7915) / 2
-__EARTH_DNS = 5.5
+from .planet import Planet
 
 class EmptyOrbit:
     def __init__(self) -> None:

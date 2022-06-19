@@ -4,6 +4,8 @@ from enum import Enum
 from .planet import Planet
 from dice import d6
 from .moons import Moon
+import random
+from .density import Density
 
 class GasGiant(Planet):
     """Encapsulate Gas Giant info."""
