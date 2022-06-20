@@ -27,7 +27,7 @@ class GasGiant(Planet):
     def __init__(self, star:Star, fixed = None) -> None:
         super().__init__()
         if fixed == None:
-            self.__initR__()
+            self.__initR__(star)
         elif isinstance(fixed, GasGiant.Size):
             self.__initR__(star, fixed)
         else:
@@ -38,6 +38,7 @@ class GasGiant(Planet):
             self._axtilt = fixed._axtilt
             self._moons = fixed._moons
             self.__sfeats = fixed.__sfeats
+            self._lod = fixed._lod
     def __initR__(self, star:Star, size:Size = None):
         if size == None:
             self.__dow = False
@@ -124,10 +125,17 @@ class GasGiant(Planet):
             elif r == 18: accepted += 2
             else: dictInc(self.__sfeats, GasGiant.SpecialFeature.HabitableMoon)
 
+    @property
     def size(self) -> Size:
         """Get size category."""
         return self.__size
         
+    @property
     def destroyerOfWorlds(self) -> bool:
         """Is this giant a 'destroyer of worlds'?"""
         return self.__dow
+
+    @property
+    def special_features(self) -> dict:
+        """Get map of special features."""
+        return self.__sfeats

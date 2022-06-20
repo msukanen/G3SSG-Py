@@ -10,6 +10,7 @@ class Planet:
         self._radius = None
         self._moons = None
         self._axtilt = AxialTilt()
+        self._lod = None
 
     @property
     def density(self) -> float:
@@ -35,3 +36,12 @@ class Planet:
     def axial_tilt(self) -> AxialTilt:
         """Get axial tilt."""
         return self._axtilt
+
+    @property
+    def day_length(self) -> int:
+        """Get length of day (in hours); None if planet is tide locked."""
+        return self._lod
+
+    def _determine_day_length(self) -> int:
+        """Determine day length..."""
+        

@@ -25,9 +25,18 @@ class AxialTilt:
             self.__tilt = fixed.__tilt
             self.__seasonalEffect = fixed.__seasonalEffect
         else: raise Exception(f'No idea how to convert {type(fixed)} into axial tilt...')
+    
     def __mkEff(self):
         if   self.__tilt <  3: return AxialTilt.SeasonalEffect.NoSeasons
         elif self.__tilt < 19: return AxialTilt.SeasonalEffect.Minor
         elif self.__tilt < 33: return AxialTilt.SeasonalEffect.EarthLike
         elif self.__tilt < 50: return AxialTilt.SeasonalEffect.Major
         else:                  return AxialTilt.SeasonalEffect.Gross
+
+    @property
+    def angle(self):
+        return self.__tilt
+
+    @property
+    def seasonal_effect(self):
+        return self.__seasonalEffect
