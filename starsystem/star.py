@@ -84,19 +84,19 @@ class Star:
             else:        sz = Star.Type.IV
         # determine type 2nd
         if sz == Star.Type.V:
-            r = d6(3)
-            if   r == 3: ty = Star.Class.O
-            elif r == 4: ty = Star.Class.B
-            elif r == 5: ty = Star.Class.A
-            elif r == 6: ty = Star.Class.F
-            elif r == 7: ty = Star.Class.G
-            elif r == 8: ty = Star.Class.K
-            else:        ty = Star.Class.M
+            match d6(3):
+                case 3: ty = Star.Class.O
+                case 4: ty = Star.Class.B
+                case 5: ty = Star.Class.A
+                case 6: ty = Star.Class.F
+                case 7: ty = Star.Class.G
+                case 8: ty = Star.Class.K
+                case _: ty = Star.Class.M
         elif sz == Star.Type.sd:
-            r = d6()
-            if   r == 1: ty = Star.Class.G
-            elif r == 2: ty = Star.Class.K
-            else:        ty = Star.Class.M
+            match d6():
+                case 1: ty = Star.Class.G
+                case 2: ty = Star.Class.K
+                case _: ty = Star.Class.M
         elif sz == Star.Type.D:
             ty = Star.Class.D
         else:
@@ -118,11 +118,10 @@ class Star:
         usz = sz
         uty = ty
         if sz == Star.Type.D:
-            accepted = False
-            while not accepted:
+            while True:
                 ost = Star()
                 if ost.size is not Star.Type.D:
-                    accepted = True
+                    break
             usz = ost.size
             uty = ost.type
         else:
@@ -131,6 +130,7 @@ class Star:
         dta  = Star.__genDtaBy(sz, ty)
         if sz == Star.Type.D:
             udta = Star.__genDtaBy(usz, uty)
+        print(dta)
         self.__size = sz
         self.__type = ty
         self.__mass = dta[0]
@@ -138,9 +138,13 @@ class Star:
         self.__innerLimit = AU(dta[2])
         self.__radius = AU(dta[3])
         if sz == Star.Type.D:
-            self.__numOrbits = udta[4]
-        else: self.__numOrbits = dta[4]
-        self.__lrm = dta[5]
+            porb = udta[4]
+            norb = udta[5]
+        else:
+            porb = dta[4]
+            norb = dta[5]
+        self.__numOrbits = 0 if d6(3)>porb else norb
+        self.__lrm = dta[6]
         self.__based = AU(0.1*d6(1))
         if (sz == Star.Type.sd) and (sz == Star.Class.M):
             self.__bodec = random.uniform(0.195, 0.205)
@@ -230,7 +234,6 @@ class Star:
         if self.__type == Star.Type.D:
             return 'D'
         return f'{self.__type}{self.__luminosity}{self.__size}'
-
     @staticmethod
     def __genDtaBy(s:Type, c:Class) -> tuple[float, AU, AU, AU, int, int, int]:
         """

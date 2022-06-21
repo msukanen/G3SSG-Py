@@ -12,8 +12,8 @@ class EmptyOrbit:
 
 class Terrestrial(Planet):
     """Encapsulate more or less 'terrestrial' planet."""
-    def __init__(self, star:Star) -> None:
-        super().__init__()
+    def __init__(self, star:Star, oid:int) -> None:
+        super().__init__(star, oid)
         self._density = Density()
 
 class Orbit:

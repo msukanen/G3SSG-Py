@@ -24,8 +24,8 @@ class GasGiant(Planet):
         AsteroidBelt = 4,
         OortBelt = 5,
         HabitableMoon = 6
-    def __init__(self, star:Star, fixed = None) -> None:
-        super().__init__()
+    def __init__(self, star:Star, oid:int, fixed = None) -> None:
+        super().__init__(star, oid)
         if fixed == None:
             self.__initR__(star)
         elif isinstance(fixed, GasGiant.Size):
@@ -34,7 +34,7 @@ class GasGiant(Planet):
             self.__size = fixed.__size
             self._radius = fixed._radius
             self.__dow = fixed.__dow
-            self._density = fixed._density
+            self.density = fixed.density
             self._axtilt = fixed._axtilt
             self._moons = fixed._moons
             self.__sfeats = fixed.__sfeats
@@ -83,7 +83,7 @@ class GasGiant(Planet):
                 self._radius = random.uniform(72000.0, 88000.0, 1)
             case _:
                 self._radius = random.uniform(180000.0, 220000.0, 1)
-        self._density = Density(category = Density.Category.GasGiant)
+        self.density = Density(category = Density.Category.GasGiant)
         # moons
         match self.__size:
             case GasGiant.Size.Large: mod = 1
@@ -124,6 +124,7 @@ class GasGiant(Planet):
                 for m in self.__moons: m.number *= 2
             elif r == 18: accepted += 2
             else: dictInc(self.__sfeats, GasGiant.SpecialFeature.HabitableMoon)
+        self._determine_day_length()
 
     @property
     def size(self) -> Size:

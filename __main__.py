@@ -6,24 +6,10 @@ from dice import *
 from starsystem import *
 
 def hello():
-    k = K(0)
-    c = toC(k) * 2
-
-    print(f'{k} = {c}')
-
-    a = AU(1)
-    l = toLY(a)
-    p = pc(l*6 + 3)
-    print(f'{a} = {l}')
-    print(f'{p}')
-
-    r = d6(2)
-    print(f'r = {r}')
-
     s = Star()
-    print(f'{s}')
-    m = mi(1)
-    print(f'{m} = {toKM(m)}')
+    print(s)
+    for x in range(s.numOrbits):
+        pass#print(f"orbit {x}")
 
 if __name__=="__main__":
     sys.exit(hello())
